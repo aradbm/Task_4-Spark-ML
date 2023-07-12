@@ -19,26 +19,22 @@ df = df.withColumn('x', split_me(col("value")))
 df = df.withColumn('y', split(col("value"), ",").getItem(11).cast(FloatType()))
 df = df.drop("value")
 
-# collect data
+# collect data & get the total number of rows
 mat = df.collect()
-
-# Get the total number of rows
 total_rows = len(mat)
 
-# Use the first n-3 rows for training
+# use the first 3/4 of the data for training
 training_data = mat[:total_rows - 3]
 
-# prepare data_x and data_y for training
 data_x = np.array([m['x'] for m in training_data])
 data_y = np.array([m['y'] for m in training_data])
 
-# Set weights (w), bias (b) and learning rate (alpha)
-# Weight vector should match the number of features
+# Set weights, bias and learning rate
 w = np.zeros(len(data_x[0]))
 b = 0
 alpha = 0.001
 
-# Implement Gradient Descent for training data
+# Gradient Descent
 for iteration in range(112000):
     deriv_b = np.mean((np.dot(data_x, w)+b)-data_y)
     gradient_w = 1.0/len(data_y) * \
@@ -49,20 +45,12 @@ for iteration in range(112000):
 print("w = ", w)
 print("b = ", b)
 
-# Now, let's test the model on the last 3 lines of the dataset
+# test the model
 test_data = mat[total_rows - 3:]
-
-# prepare data_x and data_y for testing
 test_x = np.array([m['x'] for m in test_data])
 test_y = np.array([m['y'] for m in test_data])
-
-# Get the predictions
 predictions = np.dot(test_x, w) + b
-
-# Print the real and predicted values
-for real, pred in zip(test_y, predictions):
-    print("Real:" + str(real) + " Pred:" + str(pred))
-
-# Calculate the Mean Squared Error
 mse = np.mean((test_y - predictions) ** 2)
-print(f'Mean Squared Error: {mse}')
+print("Mean Squared Error:" + str(mse))
+
+spark.stop()
